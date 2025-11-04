@@ -4,8 +4,8 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { format } from "date-fns"
-import { ja } from "date-fns/locale"
 import { createLessonSchema, type CreateLessonInput } from "@/lib/validations/lesson"
+import { createLesson } from "@/app/actions/lessons"
 import {
   Dialog,
   DialogContent,
@@ -30,10 +30,9 @@ import { useToast } from "@/hooks/use-toast"
 
 interface CreateLessonFormProps {
   children: React.ReactNode
-  onSuccess?: () => void
 }
 
-export function CreateLessonForm({ children, onSuccess }: CreateLessonFormProps) {
+export function CreateLessonForm({ children }: CreateLessonFormProps) {
   const [open, setOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
@@ -54,20 +53,10 @@ export function CreateLessonForm({ children, onSuccess }: CreateLessonFormProps)
   async function onSubmit(data: CreateLessonInput) {
     setIsSubmitting(true)
     try {
-      const response = await fetch("/api/lessons", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...data,
-          startAt: data.startAt.toISOString(),
-        }),
-      })
+      const result = await createLesson(data)
 
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || "レッスンの作成に失敗しました")
+      if (!result.success) {
+        throw new Error(result.message || "レッスンの作成に失敗しました")
       }
 
       toast({
@@ -77,7 +66,6 @@ export function CreateLessonForm({ children, onSuccess }: CreateLessonFormProps)
 
       form.reset()
       setOpen(false)
-      onSuccess?.()
     } catch (error) {
       toast({
         title: "エラー",
