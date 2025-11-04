@@ -17,7 +17,7 @@ export default async function BookingPage({ params }: BookingPageProps) {
 
   // 講師情報を取得
   const instructor = await db.query.users.findFirst({
-    where: eq(users.id, instructorId)
+    where: eq(users.id, instructorId),
   })
 
   if (!instructor) {
@@ -31,11 +31,11 @@ export default async function BookingPage({ params }: BookingPageProps) {
       eq(lessons.isBooked, false),
       gt(lessons.startAt, new Date())
     ),
-    orderBy: (lessons, { desc }) => [desc(lessons.startAt)]
+    orderBy: (lessons, { desc }) => [desc(lessons.startAt)],
   })
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
+    <div className="container mx-auto max-w-6xl px-4 py-8">
       {/* 講師情報 */}
       <div className="mb-8">
         <Card>
@@ -55,7 +55,7 @@ export default async function BookingPage({ params }: BookingPageProps) {
       </div>
 
       {/* レッスン一覧 */}
-      <h2 className="text-2xl font-bold mb-6">予約可能なレッスン</h2>
+      <h2 className="mb-6 text-2xl font-bold">予約可能なレッスン</h2>
       <LessonList lessons={availableLessons} />
     </div>
   )

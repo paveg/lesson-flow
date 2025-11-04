@@ -14,20 +14,26 @@ import { eq, desc } from "drizzle-orm"
 import { createId } from "@paralleldrive/cuid2"
 import { redirect } from "next/navigation"
 
-async function getOrCreateUser(authUser: { email: string; user_metadata?: { name?: string; avatar_url?: string } }) {
+async function getOrCreateUser(authUser: {
+  email: string
+  user_metadata?: { name?: string; avatar_url?: string }
+}) {
   let existingUser = await db.query.users.findFirst({
-    where: eq(users.email, authUser.email)
+    where: eq(users.email, authUser.email),
   })
 
   if (!existingUser) {
-    const [newUser] = await db.insert(users).values({
-      id: createId(),
-      email: authUser.email,
-      name: authUser.user_metadata?.name || authUser.email.split('@')[0],
-      profileImageUrl: authUser.user_metadata?.avatar_url || null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }).returning()
+    const [newUser] = await db
+      .insert(users)
+      .values({
+        id: createId(),
+        email: authUser.email,
+        name: authUser.user_metadata?.name || authUser.email.split("@")[0],
+        profileImageUrl: authUser.user_metadata?.avatar_url || null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning()
     existingUser = newUser
   }
 
@@ -42,12 +48,12 @@ export default async function DashboardPage() {
 
   const dbUser = await getOrCreateUser({
     email: authUser.email!,
-    user_metadata: authUser.user_metadata
+    user_metadata: authUser.user_metadata,
   })
 
   const instructorLessons = await db.query.lessons.findMany({
     where: eq(lessons.instructorId, dbUser.id),
-    orderBy: [desc(lessons.startAt)]
+    orderBy: [desc(lessons.startAt)],
   })
 
   // 環境変数から安全にbaseURLを取得（Host header injection対策）
@@ -86,9 +92,9 @@ export default async function DashboardPage() {
         {instructorLessons.length === 0 ? (
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center p-12 text-center">
-              <Plus className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">レッスンがありません</h3>
-              <p className="text-sm text-muted-foreground mb-4">
+              <Plus className="mb-4 h-12 w-12 text-muted-foreground" />
+              <h3 className="mb-2 text-lg font-semibold">レッスンがありません</h3>
+              <p className="mb-4 text-sm text-muted-foreground">
                 最初のレッスンを作成して、生徒の予約を受け付けましょう
               </p>
               <CreateLessonForm>
@@ -118,7 +124,7 @@ export default async function DashboardPage() {
                   <div className="space-y-2">
                     {lesson.description && (
                       <>
-                        <p className="text-sm text-muted-foreground line-clamp-2">
+                        <p className="line-clamp-2 text-sm text-muted-foreground">
                           {lesson.description}
                         </p>
                         <Separator />
@@ -131,7 +137,9 @@ export default async function DashboardPage() {
                     <Separator />
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">定員</span>
-                      <span>{lesson.isBooked ? lesson.maxStudents : 0} / {lesson.maxStudents}</span>
+                      <span>
+                        {lesson.isBooked ? lesson.maxStudents : 0} / {lesson.maxStudents}
+                      </span>
                     </div>
                     {lesson.durationMinutes && (
                       <>

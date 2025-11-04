@@ -31,15 +31,13 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 to-white px-4">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-blue-50 to-white px-4">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
+        <div className="mb-8 text-center">
           <Link href="/">
             <h1 className="text-3xl font-bold">LessonFlow</h1>
           </Link>
-          <p className="text-muted-foreground mt-2">
-            3分で始める、最も美しい予約システム
-          </p>
+          <p className="mt-2 text-muted-foreground">3分で始める、最も美しい予約システム</p>
         </div>
 
         <Card>
@@ -85,7 +83,7 @@ export default function LoginPage() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-sm text-muted-foreground mt-4">
+        <p className="mt-4 text-center text-sm text-muted-foreground">
           アカウントを作成することで、
           <Link href="#" className="underline">
             利用規約

@@ -5,11 +5,11 @@ import { Home } from "lucide-react"
 
 export default function NotFound() {
   return (
-    <div className="container mx-auto px-4 py-16 max-w-2xl">
+    <div className="container mx-auto max-w-2xl px-4 py-16">
       <Card className="text-center">
         <CardHeader>
           <CardTitle className="text-4xl">講師が見つかりません</CardTitle>
-          <CardDescription className="text-lg mt-4">
+          <CardDescription className="mt-4 text-lg">
             指定された講師IDが存在しないか、無効です
           </CardDescription>
         </CardHeader>

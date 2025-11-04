@@ -43,21 +43,17 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 to-white px-4">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-blue-50 to-white px-4">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
+        <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold">ようこそ！</h1>
-          <p className="text-muted-foreground mt-2">
-            基本情報を入力してください
-          </p>
+          <p className="mt-2 text-muted-foreground">基本情報を入力してください</p>
         </div>
 
         <Card>
           <CardHeader>
             <CardTitle>基本情報</CardTitle>
-            <CardDescription>
-              レッスンを始めるための初期設定を行います
-            </CardDescription>
+            <CardDescription>レッスンを始めるための初期設定を行います</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -68,9 +64,7 @@ export default function OnboardingPage() {
                   type="text"
                   placeholder="山田 太郎"
                   value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
                   disabled={isLoading}
                 />

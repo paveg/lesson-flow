@@ -63,25 +63,17 @@ export function LessonList({ lessons }: LessonListProps) {
     }
 
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {lessons.map((lesson) => (
-          <LessonCard
-            key={lesson.id}
-            lesson={lesson}
-            onSelect={handleLessonSelect}
-          />
+          <LessonCard key={lesson.id} lesson={lesson} onSelect={handleLessonSelect} />
         ))}
       </div>
     )
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <Button
-        variant="ghost"
-        className="mb-4"
-        onClick={handleBack}
-      >
+    <div className="mx-auto max-w-2xl">
+      <Button variant="ghost" className="mb-4" onClick={handleBack}>
         <ArrowLeft className="mr-2 h-4 w-4" />
         レッスン一覧に戻る
       </Button>
@@ -89,7 +81,7 @@ export function LessonList({ lessons }: LessonListProps) {
       <div className="space-y-6">
         {/* 選択されたレッスンの詳細 */}
         <div>
-          <h2 className="text-2xl font-bold mb-4">選択されたレッスン</h2>
+          <h2 className="mb-4 text-2xl font-bold">選択されたレッスン</h2>
           <LessonCard lesson={selectedLesson} showBookButton={false} />
         </div>
 
