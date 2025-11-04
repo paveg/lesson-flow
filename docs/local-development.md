@@ -62,7 +62,7 @@ scoop install stripe
 
 ### その他のインストール方法
 
-公式ドキュメントを参照：https://stripe.com/docs/stripe-cli#install
+公式ドキュメントを参照：<https://stripe.com/docs/stripe-cli#install>
 
 ## Stripe CLI のログイン
 
@@ -89,6 +89,7 @@ pnpm stripe:listen
 ```
 
 このコマンドは以下を実行します：
+
 - StripeからのWebhookイベントをローカルの`http://localhost:3000/api/webhooks/stripe`に転送
 - Webhook署名検証用のシークレット（`whsec_...`）を表示
 
@@ -143,12 +144,14 @@ Webhook signature verification failed
 ```
 
 **解決方法**:
+
 - `.env.local`の`STRIPE_WEBHOOK_SECRET`が`pnpm stripe:listen`で表示されたシークレットと一致しているか確認
 - 開発サーバーを再起動
 
 ### Webhookが受信されない
 
 **解決方法**:
+
 - `pnpm stripe:listen`が実行中か確認
 - `pnpm dev`が実行中か確認
 - `http://localhost:3000`でアプリケーションにアクセスできるか確認
