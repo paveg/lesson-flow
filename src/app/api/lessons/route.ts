@@ -3,7 +3,7 @@ import { db } from "@/lib/db"
 import { lessons, users } from "@/lib/db/schema"
 import { createLessonSchema } from "@/lib/validations/lesson"
 import { getUser } from "@/lib/supabase-server"
-import { eq, desc } from "drizzle-orm"
+import { eq, desc, and, gt } from "drizzle-orm"
 import { z } from "zod"
 import { createId } from "@paralleldrive/cuid2"
 
@@ -87,7 +87,24 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
-    // 認証チェック
+    const { searchParams } = new URL(request.url)
+    const instructorId = searchParams.get("instructorId")
+
+    // instructorIdが指定されている場合は、公開予約ページ用（認証不要）
+    if (instructorId) {
+      const availableLessons = await db.query.lessons.findMany({
+        where: and(
+          eq(lessons.instructorId, instructorId),
+          eq(lessons.isBooked, false),
+          gt(lessons.startAt, new Date()) // 未来のレッスンのみ
+        ),
+        orderBy: [desc(lessons.startAt)]
+      })
+
+      return NextResponse.json(availableLessons)
+    }
+
+    // instructorIdがない場合は、ダッシュボード用（認証必要）
     const user = await getUser()
     if (!user) {
       return NextResponse.json(
