@@ -1,53 +1,58 @@
-"use client"
-
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Copy, ExternalLink } from "lucide-react"
-import { useState, useEffect, useCallback } from "react"
-import { useToast } from "@/hooks/use-toast"
+import { Plus } from "lucide-react"
 import { CreateLessonForm } from "@/components/forms/create-lesson-form"
+import { BookingUrlCard } from "@/components/dashboard/booking-url-card"
 import { format } from "date-fns"
 import { ja } from "date-fns/locale"
-import type { Lesson } from "@/lib/db/schema"
+import { getUser } from "@/lib/supabase-server"
+import { db } from "@/lib/db"
+import { users, lessons } from "@/lib/db/schema"
+import { eq, desc } from "drizzle-orm"
+import { createId } from "@paralleldrive/cuid2"
+import { redirect } from "next/navigation"
 
-export default function DashboardPage() {
-  const { toast } = useToast()
-  const [bookingUrl] = useState("https://lessonflow.example.com/book/your-id")
-  const [lessons, setLessons] = useState<Lesson[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+async function getOrCreateUser(authUser: { email: string; user_metadata?: { name?: string; avatar_url?: string } }) {
+  let existingUser = await db.query.users.findFirst({
+    where: eq(users.email, authUser.email)
+  })
 
-  const fetchLessons = useCallback(async () => {
-    try {
-      const response = await fetch("/api/lessons")
-      if (!response.ok) {
-        throw new Error("レッスンの取得に失敗しました")
-      }
-      const data = await response.json()
-      setLessons(data)
-    } catch (error) {
-      toast({
-        title: "エラー",
-        description: error instanceof Error ? error.message : "レッスンの取得に失敗しました",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }, [toast])
-
-  useEffect(() => {
-    fetchLessons()
-  }, [fetchLessons])
-
-  function copyBookingUrl() {
-    navigator.clipboard.writeText(bookingUrl)
-    toast({
-      title: "コピーしました",
-      description: "予約URLをクリップボードにコピーしました",
-    })
+  if (!existingUser) {
+    const [newUser] = await db.insert(users).values({
+      id: createId(),
+      email: authUser.email,
+      name: authUser.user_metadata?.name || authUser.email.split('@')[0],
+      profileImageUrl: authUser.user_metadata?.avatar_url || null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning()
+    existingUser = newUser
   }
+
+  return existingUser
+}
+
+export default async function DashboardPage() {
+  const authUser = await getUser()
+  if (!authUser) {
+    redirect("/login")
+  }
+
+  const dbUser = await getOrCreateUser({
+    email: authUser.email!,
+    user_metadata: authUser.user_metadata
+  })
+
+  const instructorLessons = await db.query.lessons.findMany({
+    where: eq(lessons.instructorId, dbUser.id),
+    orderBy: [desc(lessons.startAt)]
+  })
+
+  // 環境変数から安全にbaseURLを取得（Host header injection対策）
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+  const bookingUrl = `${baseUrl}/book/${dbUser.id}`
 
   return (
     <div className="min-h-screen bg-background">
@@ -55,7 +60,7 @@ export default function DashboardPage() {
         <div className="container flex h-16 items-center justify-between">
           <h1 className="text-2xl font-bold">LessonFlow</h1>
           <div className="flex items-center space-x-4">
-            <span className="text-sm text-muted-foreground">山田 太郎</span>
+            <span className="text-sm text-muted-foreground">{dbUser.name}</span>
             <Button variant="outline" size="sm">
               ログアウト
             </Button>
@@ -65,34 +70,12 @@ export default function DashboardPage() {
 
       <div className="container py-8">
         {/* 予約URL */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>あなたの予約ページ</CardTitle>
-            <CardDescription>
-              このURLをSNSやウェブサイトでシェアして、予約を受け付けましょう
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center space-x-2">
-              <div className="flex-1 font-mono text-sm p-3 bg-muted rounded-md">
-                {bookingUrl}
-              </div>
-              <Button size="icon" variant="outline" onClick={copyBookingUrl}>
-                <Copy className="h-4 w-4" />
-              </Button>
-              <Button size="icon" variant="outline" asChild>
-                <a href={bookingUrl} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="h-4 w-4" />
-                </a>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <BookingUrlCard bookingUrl={bookingUrl} />
 
         {/* レッスン一覧 */}
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-2xl font-bold">レッスン一覧</h2>
-          <CreateLessonForm onSuccess={fetchLessons}>
+          <CreateLessonForm>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
               新しいレッスンを作成
@@ -100,24 +83,7 @@ export default function DashboardPage() {
           </CreateLessonForm>
         </div>
 
-        {isLoading ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3].map((i) => (
-              <Card key={i}>
-                <CardHeader>
-                  <div className="h-6 bg-muted animate-pulse rounded" />
-                  <div className="h-4 bg-muted animate-pulse rounded w-2/3" />
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="h-4 bg-muted animate-pulse rounded" />
-                    <div className="h-4 bg-muted animate-pulse rounded" />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : lessons.length === 0 ? (
+        {instructorLessons.length === 0 ? (
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center p-12 text-center">
               <Plus className="h-12 w-12 text-muted-foreground mb-4" />
@@ -125,7 +91,7 @@ export default function DashboardPage() {
               <p className="text-sm text-muted-foreground mb-4">
                 最初のレッスンを作成して、生徒の予約を受け付けましょう
               </p>
-              <CreateLessonForm onSuccess={fetchLessons}>
+              <CreateLessonForm>
                 <Button>
                   <Plus className="mr-2 h-4 w-4" />
                   新しいレッスンを作成
@@ -135,7 +101,7 @@ export default function DashboardPage() {
           </Card>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {lessons.map((lesson) => (
+            {instructorLessons.map((lesson) => (
               <Card key={lesson.id}>
                 <CardHeader>
                   <div className="flex items-start justify-between">
