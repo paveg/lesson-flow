@@ -80,7 +80,7 @@ export function CreateLessonForm({ children }: CreateLessonFormProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>新しいレッスンを作成</DialogTitle>
           <DialogDescription>
@@ -188,7 +188,9 @@ export function CreateLessonForm({ children }: CreateLessonFormProps) {
                       {...field}
                     />
                   </FormControl>
-                  <FormDescription>Google Meet、Zoom、Teamsなどのオンライン会議URLを入力してください</FormDescription>
+                  <FormDescription>
+                    Google Meet、Zoom、Teamsなどのオンライン会議URLを入力してください
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

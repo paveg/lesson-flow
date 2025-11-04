@@ -1,11 +1,11 @@
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { createServerClient } from "@supabase/ssr"
+import { cookies } from "next/headers"
+import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
-  const code = requestUrl.searchParams.get('code')
+  const code = requestUrl.searchParams.get("code")
   const origin = requestUrl.origin
 
   if (!code) {
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
               cookieStore.set(name, value, options)
             )
           } catch (error) {
-            console.error('Error setting cookies:', error)
+            console.error("Error setting cookies:", error)
           }
         },
       },
@@ -38,12 +38,14 @@ export async function GET(request: NextRequest) {
   const { error } = await supabase.auth.exchangeCodeForSession(code)
 
   if (error) {
-    console.error('Error exchanging code for session:', error)
+    console.error("Error exchanging code for session:", error)
     return NextResponse.redirect(`${origin}/login?error=auth_failed`)
   }
 
   // Verify the session was set correctly
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   if (!user) {
     return NextResponse.redirect(`${origin}/login?error=no_user`)

@@ -1,0 +1,12 @@
+.next
+out
+node_modules
+.cache
+public
+*.lock
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+.env
+.env.*
+!.env.example

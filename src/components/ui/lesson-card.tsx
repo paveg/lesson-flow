@@ -1,4 +1,11 @@
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, Clock, Banknote } from "lucide-react"
@@ -14,9 +21,9 @@ interface LessonCardProps {
 
 export function LessonCard({ lesson, onSelect, showBookButton = true }: LessonCardProps) {
   return (
-    <Card className="hover:shadow-lg transition-shadow">
+    <Card className="transition-shadow hover:shadow-lg">
       <CardHeader>
-        <div className="flex justify-between items-start">
+        <div className="flex items-start justify-between">
           <CardTitle className="text-xl">{lesson.title}</CardTitle>
           {!lesson.isBooked && (
             <Badge variant="secondary" className="ml-2">
@@ -44,10 +51,7 @@ export function LessonCard({ lesson, onSelect, showBookButton = true }: LessonCa
       </CardContent>
       {showBookButton && !lesson.isBooked && onSelect && (
         <CardFooter>
-          <Button
-            className="w-full"
-            onClick={() => onSelect(lesson)}
-          >
+          <Button className="w-full" onClick={() => onSelect(lesson)}>
             このレッスンを予約する
           </Button>
         </CardFooter>

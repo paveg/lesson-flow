@@ -30,9 +30,7 @@ export function BookingUrlCard({ bookingUrl }: BookingUrlCardProps) {
       </CardHeader>
       <CardContent>
         <div className="flex items-center space-x-2">
-          <div className="flex-1 font-mono text-sm p-3 bg-muted rounded-md">
-            {bookingUrl}
-          </div>
+          <div className="flex-1 rounded-md bg-muted p-3 font-mono text-sm">{bookingUrl}</div>
           <Button size="icon" variant="outline" onClick={copyBookingUrl}>
             <Copy className="h-4 w-4" />
           </Button>
