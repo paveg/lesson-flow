@@ -33,7 +33,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: "Instructor not found" }, { status: 404 })
     }
 
-    if (!instructor.stripeAccountId) {
+    const isProduction = process.env.NODE_ENV === "production"
+    const stripeAccountId = instructor.stripeAccountId
+
+    if (isProduction && !stripeAccountId) {
       return NextResponse.json(
         { message: "Instructor has not completed Stripe onboarding" },
         { status: 400 }
@@ -41,6 +44,29 @@ export async function POST(request: NextRequest) {
     }
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+
+    const paymentIntentData =
+      isProduction && stripeAccountId
+        ? {
+            application_fee_amount: Math.floor(lesson.price * 0.05),
+            transfer_data: {
+              destination: stripeAccountId,
+            },
+            metadata: {
+              lessonId: lesson.id,
+              instructorId: instructor.id,
+              studentName,
+              studentEmail,
+            },
+          }
+        : {
+            metadata: {
+              lessonId: lesson.id,
+              instructorId: instructor.id,
+              studentName,
+              studentEmail,
+            },
+          }
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -63,18 +89,7 @@ export async function POST(request: NextRequest) {
           quantity: 1,
         },
       ],
-      payment_intent_data: {
-        application_fee_amount: Math.floor(lesson.price * 0.05),
-        transfer_data: {
-          destination: instructor.stripeAccountId,
-        },
-        metadata: {
-          lessonId: lesson.id,
-          instructorId: instructor.id,
-          studentName,
-          studentEmail,
-        },
-      },
+      payment_intent_data: paymentIntentData,
       customer_email: studentEmail,
       success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/book/${instructor.id}`,
