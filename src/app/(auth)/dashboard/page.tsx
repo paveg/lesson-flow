@@ -5,12 +5,41 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { Plus, Copy, ExternalLink } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useToast } from "@/hooks/use-toast"
+import { CreateLessonForm } from "@/components/forms/create-lesson-form"
+import { format } from "date-fns"
+import { ja } from "date-fns/locale"
+import type { Lesson } from "@/lib/db/schema"
 
 export default function DashboardPage() {
   const { toast } = useToast()
   const [bookingUrl] = useState("https://lessonflow.example.com/book/your-id")
+  const [lessons, setLessons] = useState<Lesson[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  const fetchLessons = useCallback(async () => {
+    try {
+      const response = await fetch("/api/lessons")
+      if (!response.ok) {
+        throw new Error("レッスンの取得に失敗しました")
+      }
+      const data = await response.json()
+      setLessons(data)
+    } catch (error) {
+      toast({
+        title: "エラー",
+        description: error instanceof Error ? error.message : "レッスンの取得に失敗しました",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }, [toast])
+
+  useEffect(() => {
+    fetchLessons()
+  }, [fetchLessons])
 
   function copyBookingUrl() {
     navigator.clipboard.writeText(bookingUrl)
@@ -63,74 +92,96 @@ export default function DashboardPage() {
         {/* レッスン一覧 */}
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-2xl font-bold">レッスン一覧</h2>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            新しいレッスンを作成
-          </Button>
+          <CreateLessonForm onSuccess={fetchLessons}>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              新しいレッスンを作成
+            </Button>
+          </CreateLessonForm>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {/* サンプルレッスンカード */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <CardTitle className="text-lg">英会話レッスン（60分）</CardTitle>
-                <Badge>予約可能</Badge>
-              </div>
-              <CardDescription>
-                2024年12月15日 14:00
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">料金</span>
-                  <span className="font-semibold">¥3,000</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">定員</span>
-                  <span>0 / 1</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <CardTitle className="text-lg">英会話レッスン（60分）</CardTitle>
-                <Badge variant="secondary">予約済み</Badge>
-              </div>
-              <CardDescription>
-                2024年12月10日 10:00
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">料金</span>
-                  <span className="font-semibold">¥3,000</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">定員</span>
-                  <span>1 / 1</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* 新規作成カード */}
+        {isLoading ? (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+              <Card key={i}>
+                <CardHeader>
+                  <div className="h-6 bg-muted animate-pulse rounded" />
+                  <div className="h-4 bg-muted animate-pulse rounded w-2/3" />
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="h-4 bg-muted animate-pulse rounded" />
+                    <div className="h-4 bg-muted animate-pulse rounded" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : lessons.length === 0 ? (
           <Card className="border-dashed">
-            <CardContent className="flex h-full items-center justify-center p-6">
-              <Button variant="ghost" className="h-full w-full flex-col space-y-2">
-                <Plus className="h-8 w-8" />
-                <span>新しいレッスンを作成</span>
-              </Button>
+            <CardContent className="flex flex-col items-center justify-center p-12 text-center">
+              <Plus className="h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">レッスンがありません</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                最初のレッスンを作成して、生徒の予約を受け付けましょう
+              </p>
+              <CreateLessonForm onSuccess={fetchLessons}>
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  新しいレッスンを作成
+                </Button>
+              </CreateLessonForm>
             </CardContent>
           </Card>
-        </div>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {lessons.map((lesson) => (
+              <Card key={lesson.id}>
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <CardTitle className="text-lg">{lesson.title}</CardTitle>
+                    <Badge variant={lesson.isBooked ? "secondary" : "default"}>
+                      {lesson.isBooked ? "予約済み" : "予約可能"}
+                    </Badge>
+                  </div>
+                  <CardDescription>
+                    {format(new Date(lesson.startAt), "yyyy年MM月dd日 HH:mm", { locale: ja })}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {lesson.description && (
+                      <>
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {lesson.description}
+                        </p>
+                        <Separator />
+                      </>
+                    )}
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">料金</span>
+                      <span className="font-semibold">¥{lesson.price.toLocaleString()}</span>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">定員</span>
+                      <span>{lesson.isBooked ? lesson.maxStudents : 0} / {lesson.maxStudents}</span>
+                    </div>
+                    {lesson.durationMinutes && (
+                      <>
+                        <Separator />
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">時間</span>
+                          <span>{lesson.durationMinutes}分</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

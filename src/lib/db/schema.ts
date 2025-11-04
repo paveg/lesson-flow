@@ -24,7 +24,7 @@ export const lessons = pgTable('lessons', {
   price: integer('price').notNull(), // 円単位
   durationMinutes: integer('duration_minutes').notNull().default(60),
   startAt: timestamp('start_at').notNull(),
-  zoomUrl: text('zoom_url'),
+  meetingUrl: text('meeting_url'), // オンライン会議URL (Zoom, Google Meet, Teamsなど)
   maxStudents: integer('max_students').notNull().default(1),
   isBooked: boolean('is_booked').notNull().default(false),
   createdAt: timestamp('created_at').defaultNow().notNull(),
