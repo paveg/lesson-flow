@@ -268,22 +268,25 @@ Create commits in logical units and a Pull Request from current changes.
    **Step 10.2: Ask user about issue updates**
 
    Use AskUserQuestion to ask:
-   - "このPRで実装した内容に基づいて、Issue #X を更新しますか？"
-   - Options:
-     - "はい、Issue本文を確認して更新する"
-     - "いいえ、後で手動で更新する"
-     - "スキップ（Issue更新不要）"
+
+- "このPRで実装した内容に基づいて、Issue #X を更新しますか？"
+- Options:
+  - "はい、Issue本文を確認して更新する"
+  - "いいえ、後で手動で更新する"
+  - "スキップ（Issue更新不要）"
 
    **Step 10.3: Analyze implementation and suggest updates**
 
    If user chooses to update:
 
    1. **Analyze commits** to understand what was implemented:
+
       ```bash
       git log main..HEAD --pretty=format:"%s %b"
       ```
 
    2. **Fetch current issue body**:
+
       ```bash
       gh issue view <number> --json body -q .body
       ```
@@ -298,15 +301,17 @@ Create commits in logical units and a Pull Request from current changes.
    **Step 10.4: Update issue selectively**
 
    Based on user's selections:
-   - Update ONLY the selected checkboxes from `- [ ]` to `- [x]`
-   - Update any field names if needed (e.g., "Zoom URL" → "オンライン会議URL")
-   - Add implementation notes if applicable
-   - Update the issue with `gh issue edit <number> --body "<updated-body>"`
+
+- Update ONLY the selected checkboxes from `- [ ]` to `- [x]`
+- Update any field names if needed (e.g., "Zoom URL" → "オンライン会議URL")
+- Add implementation notes if applicable
+- Update the issue with `gh issue edit <number> --body "<updated-body>"`
 
    **Example selective update**:
-   - If user confirms tasks 1, 3, and 5 are complete
-   - Only update those specific checkboxes
-   - Leave others unchecked for future PRs
+
+- If user confirms tasks 1, 3, and 5 are complete
+- Only update those specific checkboxes
+- Leave others unchecked for future PRs
 
    **Step 10.5: Confirm issue was updated**
 
