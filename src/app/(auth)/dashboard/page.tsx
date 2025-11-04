@@ -13,6 +13,7 @@ import { users, lessons } from "@/lib/db/schema"
 import { eq, desc } from "drizzle-orm"
 import { createId } from "@paralleldrive/cuid2"
 import { redirect } from "next/navigation"
+import { headers } from "next/headers"
 
 async function getOrCreateUser(authUser: { email: string; user_metadata?: { name?: string; avatar_url?: string } }) {
   let existingUser = await db.query.users.findFirst({
@@ -50,6 +51,12 @@ export default async function DashboardPage() {
     orderBy: [desc(lessons.startAt)]
   })
 
+  // Server側でbaseURLを取得
+  const headersList = await headers()
+  const host = headersList.get("host") || "localhost:3000"
+  const protocol = process.env.NODE_ENV === "production" ? "https" : "http"
+  const bookingUrl = `${protocol}://${host}/book/${dbUser.id}`
+
   return (
     <div className="min-h-screen bg-background">
       <div className="border-b">
@@ -66,7 +73,7 @@ export default async function DashboardPage() {
 
       <div className="container py-8">
         {/* 予約URL */}
-        <BookingUrlCard instructorId={dbUser.id} />
+        <BookingUrlCard bookingUrl={bookingUrl} />
 
         {/* レッスン一覧 */}
         <div className="mb-4 flex items-center justify-between">

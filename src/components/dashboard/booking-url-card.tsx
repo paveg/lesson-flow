@@ -1,22 +1,16 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Copy, ExternalLink } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 interface BookingUrlCardProps {
-  instructorId: string
+  bookingUrl: string
 }
 
-export function BookingUrlCard({ instructorId }: BookingUrlCardProps) {
+export function BookingUrlCard({ bookingUrl }: BookingUrlCardProps) {
   const { toast } = useToast()
-  const [bookingUrl, setBookingUrl] = useState(`/book/${instructorId}`)
-
-  useEffect(() => {
-    setBookingUrl(`${window.location.origin}/book/${instructorId}`)
-  }, [instructorId])
 
   function copyBookingUrl() {
     navigator.clipboard.writeText(bookingUrl)
