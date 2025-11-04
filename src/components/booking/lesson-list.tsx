@@ -44,11 +44,38 @@ export function LessonList({ lessons }: LessonListProps) {
       return
     }
 
-    // TODO: 次のフェーズで決済処理を実装
-    toast({
-      title: "予約機能は準備中です",
-      description: "決済機能の実装後に予約できるようになります",
-    })
+    try {
+      const response = await fetch("/api/checkout/session", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          lessonId: selectedLesson.id,
+          studentName: studentName.trim(),
+          studentEmail: studentEmail.trim(),
+        }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.message || "決済セッションの作成に失敗しました")
+      }
+
+      const { url } = await response.json()
+
+      if (url) {
+        window.location.href = url
+      } else {
+        throw new Error("決済URLの取得に失敗しました")
+      }
+    } catch (error) {
+      toast({
+        title: "エラー",
+        description: error instanceof Error ? error.message : "予約処理に失敗しました",
+        variant: "destructive",
+      })
+    }
   }
 
   if (!selectedLesson) {
