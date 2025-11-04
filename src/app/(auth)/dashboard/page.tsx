@@ -13,7 +13,6 @@ import { users, lessons } from "@/lib/db/schema"
 import { eq, desc } from "drizzle-orm"
 import { createId } from "@paralleldrive/cuid2"
 import { redirect } from "next/navigation"
-import { headers } from "next/headers"
 
 async function getOrCreateUser(authUser: { email: string; user_metadata?: { name?: string; avatar_url?: string } }) {
   let existingUser = await db.query.users.findFirst({
@@ -51,11 +50,9 @@ export default async function DashboardPage() {
     orderBy: [desc(lessons.startAt)]
   })
 
-  // Server側でbaseURLを取得
-  const headersList = await headers()
-  const host = headersList.get("host") || "localhost:3000"
-  const protocol = process.env.NODE_ENV === "production" ? "https" : "http"
-  const bookingUrl = `${protocol}://${host}/book/${dbUser.id}`
+  // 環境変数から安全にbaseURLを取得（Host header injection対策）
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+  const bookingUrl = `${baseUrl}/book/${dbUser.id}`
 
   return (
     <div className="min-h-screen bg-background">
