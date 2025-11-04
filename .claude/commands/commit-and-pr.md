@@ -23,6 +23,7 @@ Create commits in logical units and a Pull Request from current changes.
 2. **Reviews changes and creates multiple commits by logical units** (e.g., implementation, tests, docs separately)
 3. Pushes all commits to remote
 4. Creates a PR with structured title/body
+5. **Updates related Issues** (checkboxes, content) before PR merge
 
 **IMPORTANT:**
 
@@ -44,6 +45,7 @@ Create commits in logical units and a Pull Request from current changes.
    - Check if PR exists
    - Detect related issues and ask user for confirmation/URLs
    - Create PR if needed (include issue URLs in description)
+   - Update related issues (checkboxes and content)
    - Provide summary with PR URL and commits
 
 2. **Check Git Status**:
@@ -247,10 +249,84 @@ Create commits in logical units and a Pull Request from current changes.
 
    - If `draft` argument provided, add `--draft` flag
 
-10. **Provide Summary**:
+10. **Update Related Issues (if any)**:
+
+   **IMPORTANT**: Update issue checkboxes BEFORE the PR is merged to reflect completed work.
+
+   If user provided related issues in step 8:
+
+   **Step 10.1: Fetch and display issue content**
+
+   For each issue number (e.g., #2):
+
+   ```bash
+   gh issue view 2
+   ```
+
+   Display the issue's tasks and acceptance criteria to the user.
+
+   **Step 10.2: Ask user about issue updates**
+
+   Use AskUserQuestion to ask:
+
+- "このPRで実装した内容に基づいて、Issue #X を更新しますか？"
+- Options:
+  - "はい、Issue本文を確認して更新する"
+  - "いいえ、後で手動で更新する"
+  - "スキップ（Issue更新不要）"
+
+   **Step 10.3: Analyze implementation and suggest updates**
+
+   If user chooses to update:
+
+   1. **Analyze commits** to understand what was implemented:
+
+      ```bash
+      git log main..HEAD --pretty=format:"%s %b"
+      ```
+
+   2. **Fetch current issue body**:
+
+      ```bash
+      gh issue view <number> --json body -q .body
+      ```
+
+   3. **Review the issue content** and identify which checkboxes correspond to the implemented features
+
+   4. **Present specific checkboxes to update** using AskUserQuestion:
+      - Show each unchecked task/criterion
+      - Ask user to confirm which ones should be checked based on PR implementation
+      - Use multi-select question format
+
+   **Step 10.4: Update issue selectively**
+
+   Based on user's selections:
+
+- Update ONLY the selected checkboxes from `- [ ]` to `- [x]`
+- Update any field names if needed (e.g., "Zoom URL" → "オンライン会議URL")
+- Add implementation notes if applicable
+- Update the issue with `gh issue edit <number> --body "<updated-body>"`
+
+   **Example selective update**:
+
+- If user confirms tasks 1, 3, and 5 are complete
+- Only update those specific checkboxes
+- Leave others unchecked for future PRs
+
+   **Step 10.5: Confirm issue was updated**
+
+   Verify the update with:
+
+   ```bash
+   gh issue view <number>
+   ```
+
+   Show user which checkboxes were updated.
+
+11. **Provide Summary**:
     - Display PR URL
     - Show all commits included in the PR with `git log main..HEAD --oneline`
-    - Show related issues (if any)
+    - Show related issues (if any) and their update status
     - Confirm completion
 
 ## Important Notes
