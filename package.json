@@ -19,7 +19,9 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "stripe:listen": "stripe listen --forward-to localhost:3000/api/webhooks/stripe",
+    "stripe:trigger": "stripe trigger checkout.session.completed"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -46,7 +48,7 @@
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.54.0",
     "resend": "^4.0.0",
-    "stripe": "^17.6.0",
+    "stripe": "^19.2.0",
     "tailwind-merge": "^3.3.0",
     "zod": "^3.24.0",
     "zustand": "^5.0.0"
