@@ -1,8 +1,26 @@
 import Stripe from "stripe"
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-10-29.clover",
-  typescript: true,
+let stripeInstance: Stripe | null = null
+
+function getStripe(): Stripe {
+  if (!stripeInstance) {
+    const apiKey = process.env.STRIPE_SECRET_KEY
+    if (!apiKey) {
+      throw new Error("STRIPE_SECRET_KEY is not defined in environment variables")
+    }
+    stripeInstance = new Stripe(apiKey, {
+      apiVersion: "2025-10-29.clover",
+      typescript: true,
+    })
+  }
+  return stripeInstance
+}
+
+export const stripe = new Proxy({} as Stripe, {
+  get: (_, prop) => {
+    const stripeClient = getStripe()
+    return stripeClient[prop as keyof Stripe]
+  },
 })
 
 // Helper function to create Stripe Connect account
