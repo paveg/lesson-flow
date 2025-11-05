@@ -52,10 +52,7 @@ export async function POST(request: NextRequest) {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL
     if (isProduction && !baseUrl) {
       console.error("NEXT_PUBLIC_APP_URL is not configured in production")
-      return NextResponse.json(
-        { message: "Application URL not configured" },
-        { status: 500 }
-      )
+      return NextResponse.json({ message: "Application URL not configured" }, { status: 500 })
     }
     const appUrl = baseUrl || "http://localhost:3000"
 
