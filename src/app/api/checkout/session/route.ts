@@ -3,6 +3,8 @@ import { stripe } from "@/lib/stripe"
 import { db } from "@/lib/db"
 import { lessons, users } from "@/lib/db/schema"
 import { eq } from "drizzle-orm"
+import { PLATFORM_FEE_RATE } from "@/config/constants"
+import { isValidEmail } from "@/lib/utils/validation"
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,6 +13,10 @@ export async function POST(request: NextRequest) {
 
     if (!lessonId || !studentName || !studentEmail) {
       return NextResponse.json({ message: "Missing required fields" }, { status: 400 })
+    }
+
+    if (!isValidEmail(studentEmail)) {
+      return NextResponse.json({ message: "Invalid email format" }, { status: 400 })
     }
 
     const lesson = await db.query.lessons.findFirst({
@@ -43,12 +49,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL
+    if (isProduction && !baseUrl) {
+      console.error("NEXT_PUBLIC_APP_URL is not configured in production")
+      return NextResponse.json(
+        { message: "Application URL not configured" },
+        { status: 500 }
+      )
+    }
+    const appUrl = baseUrl || "http://localhost:3000"
 
     const paymentIntentData =
       isProduction && stripeAccountId
         ? {
-            application_fee_amount: Math.floor(lesson.price * 0.05),
+            application_fee_amount: Math.floor(lesson.price * PLATFORM_FEE_RATE),
             transfer_data: {
               destination: stripeAccountId,
             },
@@ -91,8 +105,8 @@ export async function POST(request: NextRequest) {
       ],
       payment_intent_data: paymentIntentData,
       customer_email: studentEmail,
-      success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/book/${instructor.id}`,
+      success_url: `${appUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${appUrl}/book/${instructor.id}`,
       metadata: {
         lessonId: lesson.id,
         instructorId: instructor.id,

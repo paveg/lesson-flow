@@ -13,10 +13,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: "Missing stripe-signature header" }, { status: 400 })
   }
 
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
+  if (!webhookSecret) {
+    console.error("STRIPE_WEBHOOK_SECRET is not configured")
+    return NextResponse.json({ message: "Webhook secret not configured" }, { status: 500 })
+  }
+
   let event: Stripe.Event
 
   try {
-    event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET!)
+    event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
   } catch (error) {
     console.error("Webhook signature verification failed:", error)
     return NextResponse.json({ message: "Invalid signature" }, { status: 400 })
@@ -40,21 +46,24 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ message: "Missing payment_intent" }, { status: 400 })
       }
 
-      const lesson = await db.query.lessons.findFirst({
-        where: eq(lessons.id, lessonId),
-      })
-
-      if (!lesson) {
-        console.error("Lesson not found:", lessonId)
-        return NextResponse.json({ message: "Lesson not found" }, { status: 404 })
-      }
-
-      if (lesson.isBooked) {
-        console.warn("Lesson already booked:", lessonId)
-        return NextResponse.json({ received: true })
-      }
-
+      // Use transaction to prevent race conditions
       await db.transaction(async (tx) => {
+        // Check lesson exists and is available within transaction
+        const lesson = await tx.query.lessons.findFirst({
+          where: eq(lessons.id, lessonId),
+        })
+
+        if (!lesson) {
+          throw new Error(`Lesson not found: ${lessonId}`)
+        }
+
+        if (lesson.isBooked) {
+          console.warn("Lesson already booked:", lessonId)
+          // Return gracefully - this is idempotent webhook handling
+          return
+        }
+
+        // Create booking and mark lesson as booked atomically
         await tx.insert(bookings).values({
           lessonId,
           studentName,

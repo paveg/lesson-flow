@@ -1,6 +1,7 @@
 import { drizzle } from "drizzle-orm/postgres-js"
 import postgres from "postgres"
 import * as schema from "./schema"
+import { DB_POOL_CONFIG } from "@/config/constants"
 
 const connectionString = process.env.DATABASE_URL!
 
@@ -12,7 +13,7 @@ const getClient = () => {
   if (!global.dbClient) {
     global.dbClient = postgres(connectionString, {
       prepare: false,
-      max: 1,
+      max: DB_POOL_CONFIG.MAX_CONNECTIONS,
     })
   }
   return global.dbClient

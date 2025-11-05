@@ -1,10 +1,37 @@
 import { Suspense } from "react"
+import { redirect } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { CheckCircle } from "lucide-react"
 import Link from "next/link"
+import { stripe } from "@/lib/stripe"
 
-function SuccessContent() {
+interface SuccessPageProps {
+  searchParams: Promise<{ session_id?: string }>
+}
+
+async function SuccessContent({ searchParams }: SuccessPageProps) {
+  const params = await searchParams
+  const sessionId = params.session_id
+
+  // Validate session_id is provided
+  if (!sessionId) {
+    redirect("/")
+  }
+
+  // Verify the session with Stripe
+  try {
+    const session = await stripe.checkout.sessions.retrieve(sessionId)
+
+    // Ensure payment was successful
+    if (session.payment_status !== "paid") {
+      redirect("/")
+    }
+  } catch (error) {
+    console.error("Failed to verify checkout session:", error)
+    redirect("/")
+  }
+
   return (
     <div className="container mx-auto flex min-h-screen items-center justify-center px-4 py-16">
       <Card className="w-full max-w-md">
@@ -34,10 +61,10 @@ function SuccessContent() {
   )
 }
 
-export default function SuccessPage() {
+export default async function SuccessPage(props: SuccessPageProps) {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <SuccessContent />
+      <SuccessContent searchParams={props.searchParams} />
     </Suspense>
   )
 }
